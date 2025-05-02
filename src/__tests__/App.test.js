@@ -5,9 +5,11 @@ import {
   render,
   screen,
   waitForElementToBeRemoved,
+  waitFor,
 } from "@testing-library/react";
 import "@testing-library/jest-dom/extend-expect";
 import { server } from "../mocks/server";
+import { rest } from "msw";
 
 import App from "../components/App";
 
@@ -53,7 +55,9 @@ test("creates a new question when the form is submitted", async () => {
   // view questions
   fireEvent.click(screen.queryByText(/View Questions/));
 
-  expect(await screen.findByText(/Test Prompt/g)).toBeInTheDocument();
+  // wait for "Test Prompt" to appear in the DOM
+  await waitFor(() => expect(screen.queryByText(/Test Prompt/g)).toBeInTheDocument());
+
   expect(await screen.findByText(/lorem testum 1/g)).toBeInTheDocument();
 });
 
@@ -80,15 +84,21 @@ test("updates the answer when the dropdown is changed", async () => {
 
   fireEvent.click(screen.queryByText(/View Questions/));
 
+  // Wait for the question list to render by checking for the second question
   await screen.findByText(/lorem testum 2/g);
 
-  fireEvent.change(screen.queryAllByLabelText(/Correct Answer/)[0], {
+  // Use findAllByLabelText to ensure the dropdown is present
+  const dropdowns = await screen.findAllByLabelText(/Correct Answer/);
+
+  fireEvent.change(dropdowns[0], {
     target: { value: "3" },
   });
 
-  expect(screen.queryAllByLabelText(/Correct Answer/)[0].value).toBe("3");
+  expect(dropdowns[0].value).toBe("3");
 
   rerender(<App />);
 
-  expect(screen.queryAllByLabelText(/Correct Answer/)[0].value).toBe("3");
+  // Verify the value persists after rerender
+  const updatedDropdowns = await screen.findAllByLabelText(/Correct Answer/);
+  expect(updatedDropdowns[0].value).toBe("3");
 });

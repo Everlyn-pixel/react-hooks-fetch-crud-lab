@@ -5,6 +5,8 @@ let questions = data;
 
 export const handlers = [
   rest.get("http://localhost:4000/questions", (req, res, ctx) => {
+    console.log("GET /questions called");
+    console.log("Returning questions:", questions);
     return res(ctx.json(questions));
   }),
   rest.post("http://localhost:4000/questions", (req, res, ctx) => {
